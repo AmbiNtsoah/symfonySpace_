@@ -16,6 +16,9 @@ class Role
     #[ORM\Column(length: 255)]
     private ?string $nom = null;
 
+    #[ORM\ManyToOne(inversedBy: 'roles')]
+    private ?User $users = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -36,6 +39,18 @@ class Role
     public function setNom(string $nom): static
     {
         $this->nom = $nom;
+
+        return $this;
+    }
+
+    public function getUsers(): ?User
+    {
+        return $this->users;
+    }
+
+    public function setUsers(?User $users): static
+    {
+        $this->users = $users;
 
         return $this;
     }

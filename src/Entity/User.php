@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
@@ -27,6 +29,20 @@ class User
 
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
+
+    /**
+     * @var Collection<int, Role>
+     */
+    #[ORM\OneToMany(targetEntity: Role::class, mappedBy: 'users')]
+    private Collection $roles;
+
+    #[ORM\OneToOne(mappedBy: 'users', cascade: ['persist', 'remove'])]
+    private ?Preference $preference = null;
+
+    public function __construct()
+    {
+        $this->roles = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -96,6 +112,58 @@ class User
     public function setCreatedAt(\DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Role>
+     */
+    public function getRoles(): Collection
+    {
+        return $this->roles;
+    }
+
+    public function addRole(Role $role): static
+    {
+        if (!$this->roles->contains($role)) {
+            $this->roles->add($role);
+            $role->setUsers($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRole(Role $role): static
+    {
+        if ($this->roles->removeElement($role)) {
+            // set the owning side to null (unless already changed)
+            if ($role->getUsers() === $this) {
+                $role->setUsers(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getPreference(): ?Preference
+    {
+        return $this->preference;
+    }
+
+    public function setPreference(?Preference $preference): static
+    {
+        // unset the owning side of the relation if necessary
+        if ($preference === null && $this->preference !== null) {
+            $this->preference->setUsers(null);
+        }
+
+        // set the owning side of the relation if necessary
+        if ($preference !== null && $preference->getUsers() !== $this) {
+            $preference->setUsers($this);
+        }
+
+        $this->preference = $preference;
 
         return $this;
     }

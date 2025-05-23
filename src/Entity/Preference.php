@@ -22,6 +22,9 @@ class Preference
     #[ORM\Column(nullable: true)]
     private ?bool $notification = null;
 
+    #[ORM\OneToOne(inversedBy: 'preference', cascade: ['persist', 'remove'])]
+    private ?User $users = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -66,6 +69,18 @@ class Preference
     public function setNotification(?bool $notification): static
     {
         $this->notification = $notification;
+
+        return $this;
+    }
+
+    public function getUsers(): ?User
+    {
+        return $this->users;
+    }
+
+    public function setUsers(?User $users): static
+    {
+        $this->users = $users;
 
         return $this;
     }

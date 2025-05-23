@@ -6,27 +6,36 @@ use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-class User
+class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
+    #[Groups(['user:read'])]
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
+    #[Groups(['user:read'])]
     #[ORM\Column(length: 255)]
     private ?string $nom = null;
 
+    #[Groups(['user:read'])]
     #[ORM\Column(length: 255)]
     private ?string $email = null;
 
+    #[Groups(['user:read'])]
     #[ORM\Column(length: 255)]
     private ?string $prenom = null;
 
+    #[Groups(['user:read'])]
     #[ORM\Column(length: 255)]
     private ?string $password = null;
 
+    #[Groups(['user:read'])]
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
 
@@ -119,10 +128,27 @@ class User
     /**
      * @return Collection<int, Role>
      */
-    public function getRoles(): Collection
+    public function getRoles(): array
+    {
+        $roleNames = [];
+        foreach ($this->roles as $role) {
+            $roleNames[] = $role->getNom();
+        }
+        // Ajoute "ROLE_USER" par défaut pour éviter les problèmes de sécurité
+        return array_unique(array_merge($roleNames, ['ROLE_USER']));
+    }
+
+    /**
+     * @return Collection<int, Role>
+     */
+    public function getRolesCollection(): Collection
     {
         return $this->roles;
     }
+    // public function getRoles(): Collection
+    // {
+    //     return $this->roles;
+    // }
 
     public function addRole(Role $role): static
     {
@@ -166,5 +192,15 @@ class User
         $this->preference = $preference;
 
         return $this;
+    }
+
+     public function eraseCredentials(): void
+    {
+        // Permet d'effacer les données sensibles après l'authentification (si nécessaire)
+    }
+
+    public function getUserIdentifier(): string
+    {
+        return $this->email; // Symfony utilise cette méthode pour identifier un utilisateur
     }
 }
